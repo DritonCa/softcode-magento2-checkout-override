@@ -1,0 +1,239 @@
+<?php
+/** @var $block \Magento\Framework\View\Element\Template */
+$baseUrl = $block->getUrl('');
+?>
+
+<div class="my-4 sc-override-wrapper">
+
+    <!-- TOP BAR -->
+    <header class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <strong>
+                        <?= __("1. Vælg leveringsmetode") ?> —
+                        <?= __("2. Vælg betalingsmetode") ?> —
+                        <?= __("3. Ordrebekræftelse") ?>
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="row">
+
+        <!-- =================================================
+             COLUMN 1 – COMPANY + USER + ADDRESS
+        ================================================== -->
+        <div class="col-lg-4 mb-4">
+
+            <!-- COMPANY TYPE -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><?= __("Virksomhedstype") ?></h4>
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="company_type" value="ean" checked>
+                        <label class="form-check-label">
+                            <strong><?= __("Kommunal institution") ?></strong><br>
+                            (<?= __("alt med EAN – faktura 14 dage") ?>)
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="company_type" value="cvr">
+                        <label class="form-check-label">
+                            <strong><?= __("Undervisningsrelateret") ?></strong><br>
+                            <?= __("Privat virksomhed (CVR – faktura 14 dage)") ?>
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="company_type" value="privat">
+                        <label class="form-check-label">
+                            <strong><?= __("Privat kunde") ?></strong><br>
+                            (<?= __("betalingskort el. MobilePay") ?>)
+                        </label>
+                    </div>
+
+                    <div id="sc-company-fields" style="display:none;">
+                        <hr>
+                        <h5><?= __("Virksomhedsoplysninger") ?></h5>
+
+                        <input type="text" class="form-control mb-3"
+                               id="sc-company-name"
+                               placeholder="<?= __("Virksomhedsnavn") ?>">
+
+                        <input type="text" class="form-control mb-3"
+                               id="sc-ean"
+                               placeholder="<?= __("EAN-nummer") ?>"
+                               style="display:none;">
+
+                        <input type="text" class="form-control mb-3"
+                               id="sc-cvr"
+                               placeholder="<?= __("CVR-nummer") ?>"
+                               style="display:none;">
+
+                        <div id="sc-company-error"
+                             class="text-danger small"
+                             style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USER INFO -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><?= __("Brugeroplysninger") ?></h4>
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-firstname" placeholder="<?= __("Fornavn") ?>">
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-lastname" placeholder="<?= __("Efternavn") ?>">
+
+                    <input type="email" class="form-control mb-3"
+                           id="sc-email" placeholder="<?= __("E-mailadresse") ?>">
+
+                    <input type="text" class="form-control"
+                           id="sc-phone" placeholder="<?= __("Telefonnummer") ?>">
+                </div>
+            </div>
+
+            <!-- ADDRESS (SAME STRUCTURE AS ALT ADDRESS) -->
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title"><?= __("Adresse") ?></h4>
+                    <input type="text" class="form-control mb-3"
+                           id="sc-address-street"
+                           placeholder="<?= __("Vejnavn") ?> *">
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-address-housenumber"
+                           placeholder="<?= __("Husnr") ?> *">
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-address-postcode"
+                           placeholder="<?= __("Postnr") ?> *">
+
+                    <input type="text" class="form-control"
+                           id="sc-address-city"
+                           placeholder="<?= __("By") ?> *"
+                           disabled>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="sc-use-alt-address">
+                        <label class="form-check-label" for="sc-use-alt-address">
+                            <?= __("Levering til anden adresse") ?>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =================================================
+             COLUMN 2 – DELIVERY + ALT ADDRESS + PAYMENT
+        ================================================== -->
+        <div class="col-lg-4 mb-4">
+
+            <!-- ALTERNATIVE DELIVERY ADDRESS (SAME FIELDS) -->
+            <div id="sc-alt-delivery-card" class="card mb-4" style="display:none;">
+                <div class="card-body">
+                    <h4 class="card-title"><?= __("Alternativ leveringsadresse") ?></h4>
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-alt-company"
+                           placeholder="<?= __("Virksomhedsnavn") ?>">
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-alt-receiver"
+                           placeholder="<?= __("Leveringsmodtager") ?> *">
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-alt-street"
+                           placeholder="<?= __("Vejnavn") ?> *">
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-alt-housenumber"
+                           placeholder="<?= __("Husnr") ?> *">
+
+                    <input type="text" class="form-control mb-3"
+                           id="sc-alt-postcode"
+                           placeholder="<?= __("Postnr") ?> *">
+
+                    <input type="text" class="form-control"
+                           id="sc-alt-city"
+                           placeholder="<?= __("By") ?> *"
+                           disabled>
+                </div>
+            </div>
+
+            <!-- DELIVERY -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><?= __("Leveringsmetoder") ?></h4>
+                    <div id="sc-delivery-methods"></div>
+                </div>
+            </div>
+
+            <!-- PAYMENT -->
+            <div id="sc-payment-card" class="card" style="display:none;">
+                <div class="card-body">
+                    <h4 class="card-title"><?= __("Betalingsmuligheder") ?></h4>
+                    <div id="sc-payment-mount"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =================================================
+             COLUMN 3 – CART
+        ================================================== -->
+        <div class="col-lg-4 mb-4">
+            <div class="sticky-top" style="top:20px;">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title"><?= __("Din indkøbskurv") ?></h4>
+
+                        <div class="sc-cart mb-3"></div>
+
+                        <!-- COUPON -->
+                        <div class="mb-3">
+                            <label class="form-label"><?= __("Rabatkode") ?></label>
+                            <div class="input-group">
+                                <input type="text"
+                                       id="sc-coupon-code"
+                                       class="form-control"
+                                       placeholder="<?= __("Indtast rabatkode") ?>">
+                                <button class="btn btn-outline-secondary"
+                                        id="sc-apply-coupon">
+                                    <?= __("Anvend") ?>
+                                </button>
+                            </div>
+                            <div id="sc-coupon-message"
+                                 class="small mt-1"
+                                 style="display:none;"></div>
+                        </div>
+
+                        <button id="sc-place-order"
+                                class="btn btn-success w-100"
+                                disabled>
+                            <?= __("Placer Ordre") ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.softcode = window.softcode || {};
+    window.softcode.delivery = {
+        mountPoint: '#sc-delivery-methods'
+    };
+</script>

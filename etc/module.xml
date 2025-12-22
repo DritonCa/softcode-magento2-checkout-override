@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- Module must load after Magento_Checkout so we can override its layout -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Softcode_CheckoutOverride" setup_version="0.0.1">
+        <sequence>
+            <module name="Magento_Checkout"/>
+        </sequence>
+    </module>
+</config>

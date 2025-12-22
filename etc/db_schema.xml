@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+
+    <!-- =================================================
+         QUOTE
+    ================================================= -->
+
+    <table name="quote">
+
+        <!-- Company -->
+        <column xsi:type="varchar" name="company_type" length="16" nullable="true"
+                comment="Company Type (privat/cvr/ean)"/>
+
+        <column xsi:type="varchar" name="company_name" length="255" nullable="true"
+                comment="Company Name"/>
+
+        <column xsi:type="varchar" name="company_cvr" length="32" nullable="true"
+                comment="Company CVR"/>
+
+        <column xsi:type="varchar" name="company_ean" length="32" nullable="true"
+                comment="Company EAN"/>
+
+        <!-- Main address (customer reference) -->
+        <column xsi:type="text" name="main_street" nullable="true"
+                comment="Main Street"/>
+
+        <column xsi:type="varchar" name="main_postcode" length="20" nullable="true"
+                comment="Main Postcode"/>
+
+        <column xsi:type="varchar" name="main_city" length="255" nullable="true"
+                comment="Main City"/>
+
+        <!-- Alternative delivery address -->
+        <column xsi:type="varchar" name="alt_company" length="255" nullable="true"
+                comment="Alternative Company"/>
+
+        <column xsi:type="varchar" name="alt_receiver" length="255" nullable="true"
+                comment="Alternative Receiver"/>
+
+        <column xsi:type="text" name="alt_street" nullable="true"
+                comment="Alternative Street"/>
+
+        <column xsi:type="varchar" name="alt_postcode" length="20" nullable="true"
+                comment="Alternative Postcode"/>
+
+        <column xsi:type="varchar" name="alt_city" length="255" nullable="true"
+                comment="Alternative City"/>
+
+    </table>
+
+    <!-- =================================================
+         SALES ORDER
+    ================================================= -->
+
+    <table name="sales_order">
+
+        <!-- Company -->
+        <column xsi:type="varchar" name="company_type" length="16" nullable="true"
+                comment="Company Type (privat/cvr/ean)"/>
+
+        <column xsi:type="varchar" name="company_name" length="255" nullable="true"
+                comment="Company Name"/>
+
+        <column xsi:type="varchar" name="company_cvr" length="32" nullable="true"
+                comment="Company CVR"/>
+
+        <column xsi:type="varchar" name="company_ean" length="32" nullable="true"
+                comment="Company EAN"/>
+
+        <!-- Main address (customer reference) -->
+        <column xsi:type="text" name="main_street" nullable="true"
+                comment="Main Street"/>
+
+        <column xsi:type="varchar" name="main_postcode" length="20" nullable="true"
+                comment="Main Postcode"/>
+
+        <column xsi:type="varchar" name="main_city" length="255" nullable="true"
+                comment="Main City"/>
+
+        <!-- Alternative delivery address -->
+        <column xsi:type="varchar" name="alt_company" length="255" nullable="true"
+                comment="Alternative Company"/>
+
+        <column xsi:type="varchar" name="alt_receiver" length="255" nullable="true"
+                comment="Alternative Receiver"/>
+
+        <column xsi:type="text" name="alt_street" nullable="true"
+                comment="Alternative Street"/>
+
+        <column xsi:type="varchar" name="alt_postcode" length="20" nullable="true"
+                comment="Alternative Postcode"/>
+
+        <column xsi:type="varchar" name="alt_city" length="255" nullable="true"
+                comment="Alternative City"/>
+
+    </table>
+
+</schema>

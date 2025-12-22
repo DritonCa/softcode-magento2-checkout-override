@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      layout="1column"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Softcode_CheckoutOverride::css/checkout-style.css"/>
+        <script src="jquery/jquery.min.js"/>
+        <script src="Softcode_CheckoutOverride::js/checkout.js"/>
+        <script src="Softcode_CheckoutOverride::js/cart.js"/>
+    </head>
+    <body>
+        <referenceBlock name="checkout.root" remove="true"/>
+
+        <referenceContainer name="content">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="softcode.checkout.override"
+                   template="Softcode_CheckoutOverride::checkout.phtml"/>
+        </referenceContainer>
+    </body>
+    <referenceBlock name="minicart" remove="true" />
+</page>
