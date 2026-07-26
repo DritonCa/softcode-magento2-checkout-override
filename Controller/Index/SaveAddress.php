@@ -2,6 +2,7 @@
 namespace Softcode\CheckoutOverride\Controller\Index;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -10,7 +11,7 @@ use Magento\Directory\Model\CountryFactory;
 use Magento\Directory\Model\ResourceModel\Region\CollectionFactory as RegionCollectionFactory;
 use Magento\Customer\Api\Data\GroupInterface;
 
-class SaveAddress extends Action
+class SaveAddress extends Action implements HttpPostActionInterface
 {
     public function __construct(
         Context $context,

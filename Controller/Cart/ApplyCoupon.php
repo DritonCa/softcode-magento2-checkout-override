@@ -2,11 +2,12 @@
 namespace Softcode\CheckoutOverride\Controller\Cart;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
 
-class ApplyCoupon extends Action
+class ApplyCoupon extends Action implements HttpPostActionInterface
 {
     public function __construct(
         Context $context,

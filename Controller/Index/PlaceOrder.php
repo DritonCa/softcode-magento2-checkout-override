@@ -2,6 +2,7 @@
 namespace Softcode\CheckoutOverride\Controller\Index;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -9,14 +10,15 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Customer\Api\Data\GroupInterface;
 
-class PlaceOrder extends Action
+class PlaceOrder extends Action implements HttpPostActionInterface
 {
     public function __construct(
         Context $context,
         private JsonFactory $jsonFactory,
         private CheckoutSession $checkoutSession,
         private CartRepositoryInterface $quoteRepository,
-        private CartManagementInterface $cartManagement
+        private CartManagementInterface $cartManagement,
+        private \Psr\Log\LoggerInterface $logger
     ) {
         parent::__construct($context);
     }
@@ -78,9 +80,15 @@ class PlaceOrder extends Action
             ]);
 
         } catch (\Throwable $e) {
+            // Log the real cause server-side; never leak internal messages/stack to the client.
+            $this->logger->error('Checkout placeOrder failed', [
+                'exception' => $e,
+                'quote_id'  => $this->checkoutSession->getQuoteId(),
+            ]);
+
             return $result->setData([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error'   => __('Din bestilling kunne ikke gennemføres. Prøv igen, eller kontakt os.'),
             ]);
         }
     }

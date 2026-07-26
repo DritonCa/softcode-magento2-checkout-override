@@ -2,12 +2,13 @@
 namespace Softcode\CheckoutOverride\Controller\Cart;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\Pricing\Helper\Data as PriceHelper;
 
-class Index extends Action
+class Index extends Action implements HttpGetActionInterface
 {
     public function __construct(
         Context $context,

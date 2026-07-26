@@ -2,13 +2,14 @@
 namespace Softcode\CheckoutOverride\Controller\Index;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 
-class PaymentMethods extends Action
+class PaymentMethods extends Action implements HttpGetActionInterface
 {
     public function __construct(
         Context $context,
