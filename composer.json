@@ -1,0 +1,17 @@
+{
+    "name": "softcode/module-checkout-override",
+    "description": "Custom one-page checkout override for Magento 2.",
+    "type": "magento2-module",
+    "license": "MIT",
+    "require": {
+        "php": "~8.1.0||~8.2.0",
+        "magento/framework": ">=103.0",
+        "magento/module-checkout": ">=100.4",
+        "magento/module-quote": ">=101.2",
+        "magento/module-sales": ">=103.0"
+    },
+    "autoload": {
+        "files": ["registration.php"],
+        "psr-4": { "Softcode\\CheckoutOverride\\": "" }
+    }
+}

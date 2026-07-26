@@ -1,115 +1,94 @@
-# Softcode Custom Checkout Override for Magento 2
+# Softcode_CheckoutOverride
 
-Free, lightweight Magento 2 module that provides a **solid starting point**
-for building a **fully custom checkout** with **strict business rules**.
+A Magento 2 module that replaces the default checkout with a custom, server-driven
+**one-page checkout**. It gives you a clean foundation for shops that need strict
+business rules the default checkout can't express — for example separate flows for
+private customers and companies (EAN / CVR), or placing the order straight into an ERP.
 
-This module exists because **Magento does not provide a clean, documented way
-to replace the default checkout**, and most developers struggle to find a
-reliable foundation to build on.
-
----
-
-## 🎯 Purpose of this module
-
-`Softcode_CheckoutOverride` is **not a finished checkout solution**.
-
-It is a **developer-friendly foundation** designed to be:
-
-- Extended
-- Customized
-- Refactored
-- Built upon
-
-Its main goal is to solve the **hardest part first**:
-> _Replacing Magento’s checkout in a safe, predictable, server-side way._
+> This is a **foundation to build on**, not a drop-in finished checkout. It solves
+> the hard part — replacing Magento's checkout safely and server-side — and leaves
+> the presentation open for you to shape.
 
 ---
 
-## ✨ Features
+## Requirements
 
-- 🧱 **Custom checkout foundation**
-- 🧾 **Company type handling**
-    - Privat
-    - CVR
-    - EAN
-- 💳 **Strict payment rules (server-side enforced)**
-  | Company type | Allowed payment methods |
-  |-------------|------------------------|
-  | Privat      | ePay |
-  | CVR         | ePay |
-  | EAN         | ePay + Invoice |
-- 🔐 **No frontend-only validation**
-- 🧠 **Quote → Order data mapping**
-- 🔁 **Alternative delivery address support**
-- 🧩 **Checkout-agnostic** (works with any UI)
-- 🆓 **100% free & open source**
+- Magento **2.4.x**
+- PHP **8.1** or **8.2**
 
----
+## Installation
 
-## 🧱 Supported use cases
+**With Composer (recommended)**
 
-✔ Developers building a **custom checkout from scratch**  
-✔ Headless Magento projects  
-✔ B2B / B2C hybrid shops  
-✔ Public sector (EAN) flows
+```bash
+composer require softcode/module-checkout-override
+bin/magento setup:upgrade
+bin/magento setup:di:compile
+bin/magento cache:flush
+```
 
-> This module intentionally avoids Magento Checkout JS internals.
+**Manually**
+
+Copy the module to `app/code/Softcode/CheckoutOverride`, then run the same three
+Magento commands above.
+
+Verify it is active:
+
+```bash
+bin/magento module:status Softcode_CheckoutOverride
+```
 
 ---
 
-## 🧠 What this module does (and does NOT do)
+## How it works
 
-### ✅ Handles
-- Checkout replacement architecture
-- Company type persistence
-- CVR / EAN validation
-- Payment method enforcement
-- Server-side order blocking
-- Quote → Order data mapping
+The module takes over the checkout in three layers:
 
-### ❌ Does NOT handle
-- Shipping methods
-- Carrier pricing
-- ParcelShop logic
-- Checkout UI / design
+1. **Layout** — `checkout_index_index.xml` removes Magento's default checkout
+   component and renders this module's `checkout.phtml` instead.
+2. **Frontend (JS)** — `checkout.js` / `cart.js` drive the flow with small AJAX
+   calls to the module's own controllers (address, payment, coupon, place order).
+3. **Server (controllers + observer)** — thin controllers accept each step and a
+   `ValidateAndMapQuoteToOrder` observer enforces the business rules before the
+   order is created.
 
-Shipping is expected to be handled by **separate modules** (e.g. `Softcode_Gls`).
+```
+Browser (checkout.js)
+   │  AJAX
+   ▼
+Softcode controllers ──▶ Quote ──(submit)──▶ ValidateAndMapQuoteToOrder ──▶ Order
+```
+
+### Endpoints
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET`  | `/softcode/cart/index` | Current cart contents |
+| `POST` | `/softcode/cart/applyCoupon` | Apply a discount code |
+| `POST` | `/softcode/index/index` | Save customer type (private / company) |
+| `GET`  | `/softcode/index/paymentMethods` | Available payment methods |
+| `POST` | `/softcode/index/saveAddress` | Save the address to the quote |
+| `POST` | `/softcode/index/savePayment` | Save the chosen payment method |
+| `POST` | `/softcode/index/placeOrder` | Place the order |
+
+Each controller declares its HTTP verb via `HttpGetActionInterface` /
+`HttpPostActionInterface`, per Magento conventions.
 
 ---
 
-## 🔐 Server-side validation
+## Known limitations
 
-Before an order can be placed, the module ensures:
-
-- Company type is selected
-- Required CVR / EAN exists
-- A payment method is selected
-- Payment method is allowed for the company type
-
-Invalid orders are blocked even if attempted via:
-- REST API
-- GraphQL
-- Custom frontend
-- Race conditions
+- **CSRF on the AJAX POST endpoints.** The frontend currently posts without a
+  `form_key`, so on a stock Magento the POST steps are subject to CSRF rejection.
+  Before production, send Magento's `form_key` with each POST **and** validate it in
+  the controller (implement `CsrfAwareActionInterface` backed by
+  `Magento\Framework\Data\Form\FormKey\Validator`). This is the recommended,
+  by-the-book fix and is intentionally left to the integrator so it can be tested
+  against a real checkout.
+- The template is deliberately minimal — style and copy are yours to own.
 
 ---
 
-## 🧾 Data stored on order
+## License
 
-The following fields are persisted from quote → order:
-
-- `company_type`
-- `company_name`
-- `company_cvr`
-- `company_ean`
-- Selected payment method
-- Main address reference
-- Optional alternative delivery address
-
-This makes the module suitable for:
-- Accounting
-- ERP systems
-- Further customization
-
-
-
+MIT — see [LICENSE](LICENSE).
