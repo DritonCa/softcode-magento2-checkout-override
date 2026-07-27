@@ -1,0 +1,174 @@
+<!--@subject Order confirmation #{{var order.increment_id}} @-->
+<!--@vars
+{
+"var order.increment_id":"Ordrenummer",
+"var order.getCreatedAt()":"Ordredato",
+"var billing.firstname":"Fornavn",
+"var billing.lastname":"Efternavn",
+"var billing.street":"Gade",
+"var billing.postcode":"Postnummer",
+"var billing.city":"By",
+"var billing.telephone":"Telefon",
+"var order.getCustomerEmail()":"E-mail",
+"var order.getData('company_name')":"Virksomhedsnavn",
+"var order.getData('company_ean')":"EAN",
+"var order.getData('company_cvr')":"CVR"
+}
+@-->
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ordrebekræftelse</title>
+</head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:30px 0;">
+<tr><td align="center">
+<table width="640" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1);">
+
+  <!-- ══ LOGO HEADER ══ -->
+  <tr>
+    <td style="padding:24px 32px 20px;border-bottom:4px solid #00bcd4;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="vertical-align:middle;">
+            <img src="{{var logo_url}}" alt="{{var logo_alt}}" height="55" style="display:block;">
+          </td>
+          <td style="text-align:right;vertical-align:middle;">
+            <span style="font-size:22px;font-weight:bold;letter-spacing:1px;color:#222;">Ordrebekræftelse</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ══ GREETING ══ -->
+  <tr>
+    <td style="padding:24px 32px 16px;">
+      <p style="margin:0 0 8px 0;font-size:15px;">Kære {{var billing.firstname}} {{var billing.lastname}},</p>
+      <p style="margin:0;color:#444;line-height:1.6;">
+        Tak for din ordre! Vi bekræfter hermed modtagelsen af din bestilling.
+        Du vil modtage en separat besked, når ordren afsendes.
+      </p>
+    </td>
+  </tr>
+
+  <!-- ══ ORDER META BOX ══ -->
+  <tr>
+    <td style="padding:0 32px 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f8f8;border-radius:4px;">
+        <tr>
+          <td style="padding:10px 16px;border-right:1px solid #e0e0e0;">
+            <div style="font-size:11px;color:#777;text-transform:uppercase;font-weight:bold;margin-bottom:4px;">Webordre</div>
+            <div style="font-weight:bold;">#{{var order.increment_id}}</div>
+          </td>
+          <td style="padding:10px 16px;border-right:1px solid #e0e0e0;">
+            <div style="font-size:11px;color:#777;text-transform:uppercase;font-weight:bold;margin-bottom:4px;">Ordredato</div>
+            <div>{{var order.getCreatedAt()|date:'d-m-Y'}}</div>
+          </td>
+          <td style="padding:10px 16px;border-right:1px solid #e0e0e0;">
+            <div style="font-size:11px;color:#777;text-transform:uppercase;font-weight:bold;margin-bottom:4px;">Betaling</div>
+            <div>{{var payment_html|raw}}</div>
+          </td>
+          <td style="padding:10px 16px;">
+            <div style="font-size:11px;color:#777;text-transform:uppercase;font-weight:bold;margin-bottom:4px;">Levering</div>
+            <div>{{var order.getData('gls_method')|escape}}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ══ ADDRESSES ══ -->
+  <tr>
+    <td style="padding:0 32px 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <!-- Faktureringsadresse -->
+          <td style="width:50%;vertical-align:top;padding-right:16px;">
+            <div style="font-size:11px;font-weight:bold;text-transform:uppercase;color:#777;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:10px;">
+              Faktureringsadresse
+            </div>
+            {{if order.getData('company_name')}}
+              <div style="font-weight:bold;">{{var order.getData('company_name')|escape}}</div>
+            {{/if}}
+            {{if order.getData('company_ean')}}
+              <div style="font-size:12px;color:#555;">EAN: {{var order.getData('company_ean')|escape}}</div>
+            {{/if}}
+            {{if order.getData('company_cvr')}}
+              <div style="font-size:12px;color:#555;">CVR: {{var order.getData('company_cvr')|escape}}</div>
+            {{/if}}
+            <div>{{var billing.firstname}} {{var billing.lastname}}</div>
+            <div>{{var billing.street}}</div>
+            <div>{{var billing.postcode}} {{var billing.city}}</div>
+            <div style="margin-top:6px;font-size:13px;color:#555;">Tlf: {{var billing.telephone}}</div>
+            <div style="font-size:13px;color:#555;">
+              <a href="mailto:{{var order.getCustomerEmail()}}" style="color:#4a4a99;text-decoration:none;">
+                {{var order.getCustomerEmail()}}
+              </a>
+            </div>
+          </td>
+          <!-- Leveringsadresse -->
+          <td style="width:50%;vertical-align:top;padding-left:16px;">
+            <div style="font-size:11px;font-weight:bold;text-transform:uppercase;color:#777;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:10px;">
+              Leveringsadresse
+            </div>
+            {{var formattedShippingAddress|raw}}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ══ ITEMS (custom tema-override matcher success-siden; injiceres af AddOrderEmailItems) ══ -->
+  <tr>
+    <td style="padding:0 32px 0;">
+      {{var items_html|raw}}
+    </td>
+  </tr>
+
+  <!-- ══ TOTALS ══ -->
+  <tr>
+    <td style="padding:16px 32px 32px;">
+      <table width="300" cellpadding="0" cellspacing="0" style="margin-left:auto;font-size:13px;">
+        {{if total_discount}}
+        <tr>
+          <td style="padding:4px 6px;color:#4caf50;">Rabat</td>
+          <td style="padding:4px 6px;text-align:right;color:#4caf50;">- {{var total_discount}}</td>
+        </tr>
+        {{/if}}
+        <tr>
+          <td style="padding:4px 6px;color:#555;">Fragt (inkl. moms)</td>
+          <td style="padding:4px 6px;text-align:right;">{{var total_shipping}}</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:#555;">Moms (25%)</td>
+          <td style="padding:4px 6px;text-align:right;">{{var total_tax}}</td>
+        </tr>
+        <tr style="border-top:2px solid #222;">
+          <td style="padding:10px 6px;font-weight:bold;font-size:15px;">Total m/moms</td>
+          <td style="padding:10px 6px;text-align:right;font-weight:bold;font-size:15px;">
+            DKK {{var total_grand}}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ══ FOOTER ══ -->
+  <tr>
+    <td style="background:#00bcd4;padding:16px 32px;text-align:center;color:#fff;font-size:11px;line-height:1.8;">
+      {{config path="general/store_information/name"}}
+      {{depend store_phone=$store_phone}} &nbsp;–&nbsp; {{config path="general/store_information/phone"}}{{/depend}}<br>
+      {{config path="trans_email/ident_support/email"}}
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+
+</body>
+</html>

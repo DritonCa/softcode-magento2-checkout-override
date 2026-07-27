@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <!-- "Vis kurv" er fjernet: send kurv-siden til det custom checkout -->
+    <event name="controller_action_predispatch_checkout_cart_index">
+        <observer name="softcode_redirect_cart_to_checkout"
+                  instance="Softcode\CheckoutOverride\Observer\RedirectCartToCheckout"/>
+    </event>
+</config>

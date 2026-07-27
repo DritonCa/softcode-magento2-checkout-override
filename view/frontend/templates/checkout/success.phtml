@@ -1,0 +1,232 @@
+<?php
+/** @var \Softcode\CheckoutOverride\Block\Checkout\Success $block */
+$order   = $block->getOrder();
+$billing = $block->getBillingAddress();
+$ship    = $block->getShippingAddress();
+$company = $block->getCompanyData();
+$totals  = $block->getOrderTotals();
+$items   = $block->getOrderItems();
+
+$isCompany = in_array($company['type'] ?? '', ['ean', 'cvr']);
+?>
+<style>
+.sc-confirm {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #222;
+    max-width: 860px;
+    margin: 32px auto 48px;
+    padding: 0 16px;
+}
+.sc-confirm table { width: 100%; border-collapse: collapse; }
+.sc-confirm-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 4px solid #00bcd4; }
+.sc-confirm-header img { height: 64px; }
+.sc-confirm-header-title { font-size: 26px; font-weight: bold; letter-spacing: 1px; text-align: right; }
+.sc-confirm-header-title small { display: block; font-size: 13px; font-weight: normal; color: #666; margin-top: 4px; }
+.sc-addr-label { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #888; margin-bottom: 8px; letter-spacing: .5px; }
+.sc-meta-box { background: #f8f8f8; border-radius: 4px; padding: 14px 0; margin-bottom: 28px; }
+.sc-meta-box td { padding: 0 18px; vertical-align: top; }
+.sc-meta-box td + td { border-left: 1px solid #e0e0e0; }
+.sc-meta-label { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+.sc-items-table th { font-size: 12px; color: #333; border-bottom: 2px solid #222; padding: 8px 6px; text-align: left; }
+.sc-items-table td { padding: 9px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+.sc-items-table .tax-line td { padding: 2px 6px 10px; font-size: 12px; color: #888; border-bottom: 1px solid #eee; }
+.sc-totals { width: 320px; margin-left: auto; margin-top: 16px; }
+.sc-totals td { padding: 5px 6px; }
+.sc-totals .grand td { border-top: 2px solid #222; padding-top: 10px; font-weight: bold; font-size: 16px; }
+.sc-footer-bar { margin-top: 40px; border-top: 3px solid #00bcd4; padding-top: 10px; text-align: center; font-size: 12px; color: #666; line-height: 1.8; }
+.sc-print-btn { display: inline-block; padding: 9px 22px; background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; color: #333; text-decoration: none; cursor: pointer; }
+.sc-print-btn:hover { background: #e8e8e8; }
+.sc-continue-btn { display: inline-block; padding: 11px 32px; background: #4caf50; color: #fff; border-radius: 4px; font-size: 15px; font-weight: bold; text-decoration: none; }
+.sc-continue-btn:hover { background: #388e3c; color: #fff; }
+@media print {
+    .sc-no-print { display: none !important; }
+    .sc-confirm { margin: 0; }
+}
+</style>
+
+<div class="sc-confirm">
+
+<?php if (!$order): ?>
+    <p>Ingen ordre fundet.</p>
+<?php else: ?>
+
+    <!-- ── DOCUMENT HEADER ── -->
+    <div class="sc-confirm-header">
+        <div class="sc-confirm-header-title">
+            Ordrebekræftelse
+            <small>Tak for din bestilling!</small>
+        </div>
+    </div>
+
+    <!-- ── META BOX ── -->
+    <table class="sc-meta-box" style="margin-bottom:28px;">
+        <tr>
+            <td style="width:25%;">
+                <div class="sc-meta-label">Webordre</div>
+                <strong>#<?= $block->escapeHtml($order->getIncrementId()) ?></strong>
+            </td>
+            <td style="width:25%;">
+                <div class="sc-meta-label">Ordredato</div>
+                <?= $block->escapeHtml($block->getOrderDate()) ?>
+            </td>
+            <td style="width:25%;">
+                <div class="sc-meta-label">Betaling</div>
+                <?= $block->escapeHtml($block->getPaymentTitle()) ?>
+            </td>
+            <td style="width:25%;">
+                <div class="sc-meta-label">Levering</div>
+                <?= $block->escapeHtml($block->getShippingMethodLabel()) ?>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ── ADDRESSES ── -->
+    <?php if ($isCompany): ?>
+    <!-- EAN/CVR: 3 columns — Fakturering | Levering | Deres ref -->
+    <table style="margin-bottom:16px;">
+        <tr>
+            <td style="width:33%;vertical-align:top;padding-right:16px;">
+                <div class="sc-addr-label">Faktureringsadresse</div>
+                <?php if ($company['name']): ?>
+                    <div style="font-weight:bold;"><?= $block->escapeHtml($company['name']) ?></div>
+                <?php endif; ?>
+                <?php if ($billing): ?>
+                    <div><?= $block->escapeHtml($billing['street']) ?></div>
+                    <div><?= $block->escapeHtml($billing['postcode']) ?> <?= $block->escapeHtml($billing['city']) ?></div>
+                <?php endif; ?>
+            </td>
+            <td style="width:33%;vertical-align:top;padding-right:16px;">
+                <div class="sc-addr-label">Leveringsadresse</div>
+                <?php $addrSrc = $ship ?: $billing; ?>
+                <?php if ($addrSrc): ?>
+                    <?php if (!empty($addrSrc['name']) && $addrSrc['name'] !== ($billing['name'] ?? '')): ?>
+                        <div style="font-weight:bold;"><?= $block->escapeHtml($addrSrc['name']) ?></div>
+                    <?php elseif ($company['name']): ?>
+                        <div style="font-weight:bold;"><?= $block->escapeHtml($company['name']) ?></div>
+                    <?php endif; ?>
+                    <div><?= $block->escapeHtml($addrSrc['street']) ?></div>
+                    <div><?= $block->escapeHtml($addrSrc['postcode']) ?> <?= $block->escapeHtml($addrSrc['city']) ?></div>
+                <?php endif; ?>
+            </td>
+            <td style="width:33%;vertical-align:top;">
+                <div class="sc-addr-label">Deres ref</div>
+                <?php if ($company['ref']): ?>
+                    <div style="font-weight:bold;"><?= $block->escapeHtml($company['ref']) ?></div>
+                <?php endif; ?>
+                <?php if ($billing): ?>
+                    <div style="color:#555;">Telefon: <?= $block->escapeHtml($billing['phone']) ?></div>
+                    <div><a href="mailto:<?= $block->escapeHtml($billing['email']) ?>" style="color:#4a4a99;"><?= $block->escapeHtml($billing['email']) ?></a></div>
+                <?php endif; ?>
+            </td>
+        </tr>
+    </table>
+    <!-- EAN/CVR number below addresses -->
+    <?php if ($company['ean']): ?>
+        <div style="margin-bottom:24px;font-size:13px;">EAN: <?= $block->escapeHtml($company['ean']) ?></div>
+    <?php elseif ($company['cvr']): ?>
+        <div style="margin-bottom:24px;font-size:13px;">CVR: <?= $block->escapeHtml($company['cvr']) ?></div>
+    <?php endif; ?>
+
+    <?php else: ?>
+    <!-- Private: 2 columns — Fakturering | Levering -->
+    <table style="margin-bottom:28px;">
+        <tr>
+            <td style="width:45%;vertical-align:top;padding-right:20px;">
+                <div class="sc-addr-label">Faktureringsadresse</div>
+                <?php if ($billing): ?>
+                    <div style="font-weight:bold;"><?= $block->escapeHtml($billing['name']) ?></div>
+                    <div><?= $block->escapeHtml($billing['street']) ?></div>
+                    <div><?= $block->escapeHtml($billing['postcode']) ?> <?= $block->escapeHtml($billing['city']) ?></div>
+                    <div style="margin-top:6px;font-size:13px;color:#555;">Telefon: <?= $block->escapeHtml($billing['phone']) ?></div>
+                    <div style="font-size:13px;"><a href="mailto:<?= $block->escapeHtml($billing['email']) ?>" style="color:#4a4a99;"><?= $block->escapeHtml($billing['email']) ?></a></div>
+                <?php endif; ?>
+            </td>
+            <td style="width:35%;vertical-align:top;padding-right:20px;">
+                <div class="sc-addr-label">Leveringsadresse</div>
+                <?php $addrSrc = $ship ?: $billing; ?>
+                <?php if ($addrSrc): ?>
+                    <div style="font-weight:bold;"><?= $block->escapeHtml($addrSrc['name']) ?></div>
+                    <div><?= $block->escapeHtml($addrSrc['street']) ?></div>
+                    <div><?= $block->escapeHtml($addrSrc['postcode']) ?> <?= $block->escapeHtml($addrSrc['city']) ?></div>
+                <?php endif; ?>
+            </td>
+            <td style="width:20%;"></td>
+        </tr>
+    </table>
+    <?php endif; ?>
+
+    <!-- ── ITEMS TABLE ── -->
+    <table class="sc-items-table" style="margin-bottom:8px;">
+        <thead>
+            <tr>
+                <th>Produktnavn</th>
+                <th style="width:70px;text-align:center;">Antal</th>
+                <th style="width:110px;text-align:right;">Pris</th>
+                <th style="width:120px;text-align:right;">Samlet pris</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($items as $item): ?>
+            <tr>
+                <td><?= $block->escapeHtml($item['name']) ?></td>
+                <td style="text-align:center;"><?= (int)$item['qty'] ?></td>
+                <td style="text-align:right;"><?= /* @noEscape */ $item['price'] ?></td>
+                <td style="text-align:right;"><?= /* @noEscape */ $item['total'] ?></td>
+            </tr>
+            <tr class="tax-line">
+                <td colspan="4">Heraf moms: <?= /* @noEscape */ $item['tax'] ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <!-- ── TOTALS ── -->
+    <table class="sc-totals">
+        <?php if ($totals['discount']): ?>
+        <tr>
+            <td style="color:#4caf50;">Rabat</td>
+            <td style="text-align:right;color:#4caf50;">- <?= /* @noEscape */ $totals['discount'] ?></td>
+        </tr>
+        <?php endif; ?>
+        <tr>
+            <td>Fragt (inkl. moms)</td>
+            <td style="text-align:right;"><?= /* @noEscape */ $totals['shipping'] ?></td>
+        </tr>
+        <tr>
+            <td style="color:#666;">Moms (25%)</td>
+            <td style="text-align:right;color:#666;"><?= /* @noEscape */ $totals['tax'] ?></td>
+        </tr>
+        <tr class="grand">
+            <td>Total m/moms</td>
+            <td style="text-align:right;">DKK <?= /* @noEscape */ $totals['grand_total'] ?></td>
+        </tr>
+    </table>
+
+    <!-- ── FOOTER BAR ── -->
+    <div class="sc-footer-bar">
+        <?= $escaper->escapeHtml($block->getStoreName()) ?>
+    </div>
+
+    <!-- ── ACTION BUTTONS (hidden on print) ── -->
+    <div class="sc-no-print" style="text-align:center;margin-top:32px;display:flex;gap:12px;justify-content:center;">
+        <a href="/" class="sc-continue-btn">Fortsæt med at handle</a>
+    </div>
+
+<?php endif; ?>
+</div>
+
+<script>
+require(['jquery', 'Magento_Customer/js/customer-data'], function ($, customerData) {
+    $(function () {
+        // Refresh our custom sc-cart sidebar
+        if (window.softcode && window.softcode.reloadCart) {
+            window.softcode.reloadCart();
+        }
+
+        // Invalidate Magento's native minicart so it reflects the empty cart
+        customerData.invalidate(['cart']);
+        customerData.reload(['cart'], true);
+    });
+});
+</script>

@@ -1,113 +1,61 @@
 <?php
+declare(strict_types=1);
+
 namespace Softcode\CheckoutOverride\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Quote\Model\Quote;
+use Magento\Sales\Model\Order;
+use Softcode\CheckoutOverride\Model\Payment\PaymentPolicy;
 
+/**
+ * Final server-side gate before an order is created:
+ *  - the buyer type and its required company/EAN number are present, and
+ *  - the chosen payment method is allowed for that buyer type (central PaymentPolicy).
+ *
+ * It then copies the buyer-type fields from the quote onto the order. Shipping
+ * (GLS) validation and mapping are intentionally left to the shipping module, so
+ * this checkout has no hidden dependency on it.
+ *
+ * Bound to sales_model_service_quote_submit_before.
+ */
 class ValidateAndMapQuoteToOrder implements ObserverInterface
 {
-    public function execute(Observer $observer)
-    {
-        /** @var \Magento\Quote\Model\Quote $quote */
-        $quote = $observer->getEvent()->getQuote();
+    public function __construct(
+        private readonly PaymentPolicy $paymentPolicy
+    ) {
+    }
 
-        /** @var \Magento\Sales\Model\Order $order */
+    public function execute(Observer $observer): void
+    {
+        /** @var Quote $quote */
+        $quote = $observer->getEvent()->getQuote();
+        /** @var Order $order */
         $order = $observer->getEvent()->getOrder();
 
-        /* =========================
-           GLS VALIDATION
-        ========================== */
-        $glsMethod = $quote->getData('gls_method');
-
-        if (!$glsMethod) {
-            throw new LocalizedException(__('Please select a delivery method.'));
+        $buyerType = (string) $quote->getData('company_type');
+        if ($buyerType === '') {
+            throw new LocalizedException(__('Please select a buyer type.'));
+        }
+        if ($buyerType === 'cvr' && !$quote->getData('company_cvr')) {
+            throw new LocalizedException(__('A CVR number is required.'));
+        }
+        if ($buyerType === 'ean' && !$quote->getData('company_ean')) {
+            throw new LocalizedException(__('An EAN number is required.'));
         }
 
-        if ($glsMethod === 'gls_shop' && !$quote->getData('gls_shop_id')) {
-            throw new LocalizedException(__('Please select a GLS pakkeshop.'));
-        }
-
-        /* =========================
-           COMPANY VALIDATION
-        ========================== */
-        $companyType = $quote->getData('company_type');
-
-        if (!$companyType) {
-            throw new LocalizedException(__('Please select a company type.'));
-        }
-
-        if ($companyType === 'cvr' && !$quote->getData('company_cvr')) {
-            throw new LocalizedException(__('CVR number is required.'));
-        }
-
-        if ($companyType === 'ean' && !$quote->getData('company_ean')) {
-            throw new LocalizedException(__('EAN number is required.'));
-        }
-
-        /* =========================
-           PAYMENT VALIDATION (FIXED)
-        ========================== */
-        $payment = $quote->getPayment();
-        $method  = $payment ? $payment->getMethod() : null;
-
-        if (!$method) {
+        $method = (string) ($quote->getPayment() ? $quote->getPayment()->getMethod() : '');
+        if ($method === '') {
             throw new LocalizedException(__('Please select a payment method.'));
         }
 
-        switch ($companyType) {
+        // Single source of truth — same policy the controllers validated against.
+        $this->paymentPolicy->assertAllowed($buyerType, $method);
 
-            case 'privat':
-            case 'cvr':
-                if ($method !== 'epay') {
-                    throw new LocalizedException(
-                        __('Only ePay is allowed for this customer type.')
-                    );
-                }
-                break;
-
-            case 'ean':
-                if (!in_array($method, ['epay', 'purchaseorder'], true)) {
-                    throw new LocalizedException(
-                        __('Selected payment method is not allowed for EAN orders.')
-                    );
-                }
-                break;
-
-            default:
-                throw new LocalizedException(__('Invalid company type.'));
+        foreach (['company_type', 'company_name', 'company_cvr', 'company_ean'] as $field) {
+            $order->setData($field, $quote->getData($field));
         }
-
-        /* =========================
-           MAP GLS DATA
-        ========================== */
-        $order->setData('gls_method',   $quote->getData('gls_method'));
-        $order->setData('gls_shop_id',  $quote->getData('gls_shop_id'));
-        $order->setData('gls_shop_name', $quote->getData('gls_shop_name'));
-        $order->setData('gls_shop_address', $quote->getData('gls_shop_address'));
-
-        /* =========================
-           MAP COMPANY DATA
-        ========================== */
-        $order->setData('company_type', $quote->getData('company_type'));
-        $order->setData('company_name', $quote->getData('company_name'));
-        $order->setData('company_cvr',  $quote->getData('company_cvr'));
-        $order->setData('company_ean',  $quote->getData('company_ean'));
-
-        /* =========================
-           MAP MAIN ADDRESS (REFERENCE)
-        ========================== */
-        $order->setData('main_street',   $quote->getData('main_street'));
-        $order->setData('main_postcode', $quote->getData('main_postcode'));
-        $order->setData('main_city',     $quote->getData('main_city'));
-
-        /* =========================
-           MAP ALT DELIVERY ADDRESS
-        ========================== */
-        $order->setData('alt_company',  $quote->getData('alt_company'));
-        $order->setData('alt_receiver', $quote->getData('alt_receiver'));
-        $order->setData('alt_street',   $quote->getData('alt_street'));
-        $order->setData('alt_postcode', $quote->getData('alt_postcode'));
-        $order->setData('alt_city',     $quote->getData('alt_city'));
     }
 }

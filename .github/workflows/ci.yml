@@ -16,13 +16,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          tools: composer, phpcs
+          tools: composer
 
-      - name: PHP syntax lint (all files)
+      - name: PHP syntax lint
         run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 -P4 php -l
 
+      # Real gate: Magento coding-standard ERRORS fail the build (warnings do not).
       - name: Magento 2 coding standard
         run: |
           composer global require magento/magento-coding-standard --no-interaction
-          ~/.composer/vendor/bin/phpcs --standard=Magento2 \
-            --extensions=php,phtml --ignore=*/vendor/* . || true
+          ~/.composer/vendor/bin/phpcs --standard=Magento2 --extensions=php,phtml -n \
+            --ignore='*/vendor/*' .

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--
+        Buyer-type payment rules. Change here to reconfigure which methods a
+        buyer type may use; controllers and the submit observer all read from
+        this single policy.
+    -->
+    <type name="Softcode\CheckoutOverride\Model\Payment\PaymentPolicy">
+        <arguments>
+            <argument name="allowedMethods" xsi:type="array">
+                <item name="privat" xsi:type="array">
+                    <item name="epay" xsi:type="string">epay</item>
+                </item>
+                <item name="cvr" xsi:type="array">
+                    <item name="epay" xsi:type="string">epay</item>
+                    <item name="purchaseorder" xsi:type="string">purchaseorder</item>
+                </item>
+                <item name="ean" xsi:type="array">
+                    <item name="epay" xsi:type="string">epay</item>
+                    <item name="purchaseorder" xsi:type="string">purchaseorder</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+</config>

@@ -1,73 +1,77 @@
 <?php
+declare(strict_types=1);
+
 namespace Softcode\CheckoutOverride\Controller\Index;
 
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Data\Form\FormKey\Validator as FormKeyValidator;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
+use Psr\Log\LoggerInterface;
+use Softcode\CheckoutOverride\Controller\FormKeyValidationTrait;
 
-class Index extends Action implements HttpPostActionInterface
+/**
+ * Persists the buyer type (private / company-CVR / public-EAN) on the quote.
+ */
+class Index implements HttpPostActionInterface, CsrfAwareActionInterface
 {
+    use FormKeyValidationTrait;
+
+    private const ALLOWED_TYPES = ['privat', 'cvr', 'ean'];
+
     public function __construct(
-        Context $context,
-        private JsonFactory $jsonFactory,
-        private CheckoutSession $checkoutSession,
-        private CartRepositoryInterface $quoteRepository
+        private readonly JsonFactory $resultJsonFactory,
+        private readonly CheckoutSession $checkoutSession,
+        private readonly CartRepositoryInterface $quoteRepository,
+        private readonly RequestInterface $request,
+        private readonly FormKeyValidator $formKeyValidator,
+        private readonly LoggerInterface $logger
     ) {
-        parent::__construct($context);
     }
 
-    public function execute()
+    public function execute(): ResultInterface
     {
-        $result = $this->jsonFactory->create();
+        $result = $this->resultJsonFactory->create();
 
         try {
             $quote = $this->checkoutSession->getQuote();
             if (!$quote->getId()) {
-                throw new \Exception('No active quote');
+                throw new LocalizedException(__('There is no active cart.'));
             }
 
-            $companyType = (string)$this->getRequest()->getParam('company_type');
-            $companyName = trim((string)$this->getRequest()->getParam('company_name'));
-            $companyCvr  = trim((string)$this->getRequest()->getParam('company_cvr'));
-            $companyEan  = trim((string)$this->getRequest()->getParam('company_ean'));
+            $type = (string) $this->request->getParam('company_type');
+            $name = trim((string) $this->request->getParam('company_name', ''));
+            $cvr = trim((string) $this->request->getParam('company_cvr', ''));
+            $ean = trim((string) $this->request->getParam('company_ean', ''));
 
-            /* ============================
-               SERVER-SIDE VALIDATION
-            ============================ */
-            if (!in_array($companyType, ['privat', 'cvr', 'ean'], true)) {
-                throw new \Exception('Invalid company type');
+            if (!in_array($type, self::ALLOWED_TYPES, true)) {
+                throw new LocalizedException(__('Please choose a valid buyer type.'));
+            }
+            if ($type === 'cvr' && $cvr === '') {
+                throw new LocalizedException(__('A CVR number is required for company orders.'));
+            }
+            if ($type === 'ean' && $ean === '') {
+                throw new LocalizedException(__('An EAN number is required for public-sector orders.'));
             }
 
-            if ($companyType === 'cvr' && !$companyCvr) {
-                throw new \Exception('CVR number is required');
-            }
-
-            if ($companyType === 'ean' && !$companyEan) {
-                throw new \Exception('EAN number is required');
-            }
-
-            /* ============================
-               SAVE TO QUOTE
-            ============================ */
-            $quote->setData('company_type', $companyType);
-            $quote->setData('company_name', $companyName ?: null);
-            $quote->setData('company_cvr', $companyCvr ?: null);
-            $quote->setData('company_ean', $companyEan ?: null);
-
+            $quote->setData('company_type', $type);
+            $quote->setData('company_name', $name ?: null);
+            $quote->setData('company_cvr', $cvr ?: null);
+            $quote->setData('company_ean', $ean ?: null);
             $this->quoteRepository->save($quote);
 
-            return $result->setData([
-                'success' => true
-            ]);
-
+            return $result->setData(['success' => true]);
+        } catch (LocalizedException $e) {
+            // Expected validation errors: safe to show to the buyer.
+            return $result->setData(['success' => false, 'error' => $e->getMessage()]);
         } catch (\Throwable $e) {
-            return $result->setData([
-                'success' => false,
-                'error'   => $e->getMessage()
-            ]);
+            $this->logger->error('Checkout saveBuyerType failed', ['exception' => $e]);
+            return $result->setData(['success' => false, 'error' => __('Your details could not be saved.')]);
         }
     }
 }

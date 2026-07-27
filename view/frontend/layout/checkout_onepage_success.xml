@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      layout="1column"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>Ordre bekræftet</title>
+    </head>
+    <body>
+        <referenceBlock name="page.main.title" remove="true"/>
+        <referenceBlock name="checkout.registration" remove="true"/>
+        <referenceContainer name="content">
+            <block class="Softcode\CheckoutOverride\Block\Checkout\Success"
+                   name="checkout.success"
+                   template="Softcode_CheckoutOverride::checkout/success.phtml"
+                   cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>

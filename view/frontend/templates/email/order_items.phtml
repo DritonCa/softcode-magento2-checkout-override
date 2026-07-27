@@ -1,0 +1,37 @@
+<?php
+/**
+ * Ordre-email varelinjer — matcher success-sidens tabel.
+ * Renderes af AddOrderEmailItems-observeren via en generisk Template-blok
+ * (ordren sættes med setData('order', ...)), så der er ingen afhængighed af
+ * tema-resolution eller Sales-renderer-lister.
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ */
+$_order = $block->getOrder();
+if (!$_order) {
+    return;
+}
+$th = 'font-size:11px;font-weight:bold;text-transform:uppercase;color:#333;border-bottom:2px solid #222;padding:8px 6px;';
+$td = 'padding:9px 6px;border-bottom:1px solid #eee;vertical-align:top;';
+?>
+<table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;border-collapse:collapse;">
+    <tr>
+        <td style="<?= /* @noEscape */ $th ?>text-align:left;">Produktnavn</td>
+        <td style="<?= /* @noEscape */ $th ?>text-align:center;width:60px;">Antal</td>
+        <td style="<?= /* @noEscape */ $th ?>text-align:right;width:100px;">Pris</td>
+        <td style="<?= /* @noEscape */ $th ?>text-align:right;width:120px;">Samlet pris</td>
+    </tr>
+    <?php foreach ($_order->getAllVisibleItems() as $_item): ?>
+        <tr>
+            <td style="<?= /* @noEscape */ $td ?>"><?= $block->escapeHtml($_item->getName()) ?></td>
+            <td style="<?= /* @noEscape */ $td ?>text-align:center;"><?= (int)$_item->getQtyOrdered() ?></td>
+            <td style="<?= /* @noEscape */ $td ?>text-align:right;"><?= /* @noEscape */ $_order->formatPriceTxt($_item->getPriceInclTax()) ?></td>
+            <td style="<?= /* @noEscape */ $td ?>text-align:right;"><?= /* @noEscape */ $_order->formatPriceTxt($_item->getRowTotalInclTax()) ?></td>
+        </tr>
+        <tr>
+            <td colspan="4" style="padding:2px 6px 10px;font-size:12px;color:#888;border-bottom:1px solid #eee;">
+                Heraf moms: <?= /* @noEscape */ $_order->formatPriceTxt($_item->getTaxAmount()) ?>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</table>

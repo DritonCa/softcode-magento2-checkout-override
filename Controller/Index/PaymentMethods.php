@@ -1,69 +1,53 @@
 <?php
+declare(strict_types=1);
+
 namespace Softcode\CheckoutOverride\Controller\Index;
 
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\HttpGetActionInterface;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultInterface;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
-class PaymentMethods extends Action implements HttpGetActionInterface
+/**
+ * Returns the payment methods available for the current quote and store.
+ */
+class PaymentMethods implements HttpGetActionInterface
 {
     public function __construct(
-        Context $context,
-        private JsonFactory $jsonFactory,
-        private CheckoutSession $checkoutSession,
-        private PaymentHelper $paymentHelper,
-        private StoreManagerInterface $storeManager
+        private readonly JsonFactory $resultJsonFactory,
+        private readonly CheckoutSession $checkoutSession,
+        private readonly PaymentHelper $paymentHelper,
+        private readonly StoreManagerInterface $storeManager,
+        private readonly LoggerInterface $logger
     ) {
-        parent::__construct($context);
     }
 
-    public function execute()
+    public function execute(): ResultInterface
     {
-        $result = $this->jsonFactory->create();
+        $result = $this->resultJsonFactory->create();
 
         try {
             $quote = $this->checkoutSession->getQuote();
             if (!$quote->getId()) {
-                throw new \Exception('No active quote');
+                return $result->setData(['success' => true, 'methods' => []]);
             }
 
-            // 🔑 Correct store context
             $storeId = (int) $this->storeManager->getStore()->getId();
 
-
-            // ✅ Magento-native way
-            $methods = $this->paymentHelper->getStoreMethods(
-                $storeId,
-                $quote
-            );
-
-            $data = [];
-
-            foreach ($methods as $method) {
-                if (!$method->isAvailable($quote)) {
-                    continue;
+            $methods = [];
+            foreach ($this->paymentHelper->getStoreMethods($storeId, $quote) as $method) {
+                if ($method->isAvailable($quote)) {
+                    $methods[] = ['code' => $method->getCode(), 'title' => $method->getTitle()];
                 }
-
-                $data[] = [
-                    'code'  => $method->getCode(),
-                    'title' => $method->getTitle()
-                ];
             }
 
-            return $result->setData([
-                'success' => true,
-                'methods' => $data
-            ]);
-
+            return $result->setData(['success' => true, 'methods' => $methods]);
         } catch (\Throwable $e) {
-            return $result->setData([
-                'success' => false,
-                'error'   => $e->getMessage()
-            ]);
+            $this->logger->error('Checkout paymentMethods failed', ['exception' => $e]);
+            return $result->setData(['success' => false, 'error' => __('Payment methods could not be loaded.')]);
         }
     }
 }

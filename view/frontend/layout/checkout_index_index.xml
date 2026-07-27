@@ -14,7 +14,9 @@
         <referenceContainer name="content">
             <block class="Magento\Framework\View\Element\Template"
                    name="softcode.checkout.override"
-                   template="Softcode_CheckoutOverride::checkout.phtml"/>
+                   template="Softcode_CheckoutOverride::checkout.phtml">
+                <block class="Magento\Framework\View\Element\FormKey" name="softcode.formkey"/>
+            </block>
         </referenceContainer>
     </body>
     <referenceBlock name="minicart" remove="true" />

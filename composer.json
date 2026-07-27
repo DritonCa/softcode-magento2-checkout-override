@@ -1,6 +1,6 @@
 {
     "name": "softcode/module-checkout-override",
-    "description": "Custom one-page checkout override for Magento 2.",
+    "description": "Custom server-driven one-page checkout for Magento 2 with a central payment policy and optional ePay integration.",
     "type": "magento2-module",
     "license": "MIT",
     "require": {
@@ -8,10 +8,19 @@
         "magento/framework": ">=103.0",
         "magento/module-checkout": ">=100.4",
         "magento/module-quote": ">=101.2",
-        "magento/module-sales": ">=103.0"
+        "magento/module-sales": ">=103.0",
+        "magento/module-payment": ">=100.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    },
+    "suggest": {
+        "epay/payment": "Enables the ePay (Bambora) hosted payment window in the checkout"
     },
     "autoload": {
         "files": ["registration.php"],
-        "psr-4": { "Softcode\\CheckoutOverride\\": "" }
+        "psr-4": {
+            "Softcode\\CheckoutOverride\\": ""
+        }
     }
 }

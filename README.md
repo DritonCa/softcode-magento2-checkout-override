@@ -1,13 +1,14 @@
 # Softcode_CheckoutOverride
 
 A Magento 2 module that replaces the default checkout with a custom, server-driven
-**one-page checkout**. It gives you a clean foundation for shops that need strict
-business rules the default checkout can't express — for example separate flows for
-private customers and companies (EAN / CVR), or placing the order straight into an ERP.
+**one-page checkout**. It targets shops with buyer-type rules the native checkout
+can't express — private, company (CVR) and public-sector (EAN) buyers — each with
+its own allowed payment methods, and an optional **ePay (Bambora)** hosted payment
+window.
 
-> This is a **foundation to build on**, not a drop-in finished checkout. It solves
-> the hard part — replacing Magento's checkout safely and server-side — and leaves
-> the presentation open for you to shape.
+The frontend is deliberately a small **reference implementation**: the value is in
+the server-side architecture (a single payment policy, CSRF-validated endpoints,
+clean dependency injection), which you build your own UI on top of.
 
 ---
 
@@ -15,10 +16,9 @@ private customers and companies (EAN / CVR), or placing the order straight into 
 
 - Magento **2.4.x**
 - PHP **8.1** or **8.2**
+- Optional: `epay/payment` for the ePay payment window
 
 ## Installation
-
-**With Composer (recommended)**
 
 ```bash
 composer require softcode/module-checkout-override
@@ -27,67 +27,96 @@ bin/magento setup:di:compile
 bin/magento cache:flush
 ```
 
-**Manually**
+Or copy the module to `app/code/Softcode/CheckoutOverride` and run the same commands.
 
-Copy the module to `app/code/Softcode/CheckoutOverride`, then run the same three
-Magento commands above.
+---
 
-Verify it is active:
+## Business rules
 
-```bash
-bin/magento module:status Softcode_CheckoutOverride
-```
+Buyer type determines the allowed payment methods. These rules live in **one place**
+— `Model\Payment\PaymentPolicy` — and are enforced by the controllers *and* the
+order-submit observer, so there is never more than one source of truth.
+
+| Buyer type | Allowed payment methods |
+| --- | --- |
+| `privat` (private) | ePay |
+| `cvr` (company) | ePay, purchase order (invoice) |
+| `ean` (public sector) | ePay, purchase order (invoice) |
+
+The buyer's chosen method is **never silently overwritten** — it is only validated.
+The ruleset is configurable in `etc/di.xml` without touching code.
+
+> **Note:** all orders are placed as **guest** orders by design (quick B2C/B2B
+> checkout without account creation). Change this in `PlaceOrder` if your shop
+> requires customer accounts.
 
 ---
 
 ## How it works
 
-The module takes over the checkout in three layers:
-
-1. **Layout** — `checkout_index_index.xml` removes Magento's default checkout
-   component and renders this module's `checkout.phtml` instead.
-2. **Frontend (JS)** — `checkout.js` / `cart.js` drive the flow with small AJAX
-   calls to the module's own controllers (address, payment, coupon, place order).
-3. **Server (controllers + observer)** — thin controllers accept each step and a
-   `ValidateAndMapQuoteToOrder` observer enforces the business rules before the
-   order is created.
-
+```mermaid
+sequenceDiagram
+    participant B as Browser (checkout.js)
+    participant C as Softcode controllers
+    participant P as PaymentPolicy
+    participant Q as Quote
+    participant O as submit observer
+    B->>C: POST buyer type / address / payment (+ form key)
+    C->>P: is this method allowed for this buyer type?
+    C->>Q: persist to quote
+    B->>C: POST place order (+ form key)
+    C->>P: assert allowed (final gate)
+    C->>O: sales_model_service_quote_submit_before
+    O->>P: assert allowed (single source of truth)
+    O-->>C: order created
+    C-->>B: success (or ePay start URL)
 ```
-Browser (checkout.js)
-   │  AJAX
-   ▼
-Softcode controllers ──▶ Quote ──(submit)──▶ ValidateAndMapQuoteToOrder ──▶ Order
-```
+
+Every POST carries Magento's **form key**, validated via `CsrfAwareActionInterface`.
+Exceptions are logged server-side; the browser only ever sees a safe message.
 
 ### Endpoints
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `GET`  | `/softcode/cart/index` | Current cart contents |
-| `POST` | `/softcode/cart/applyCoupon` | Apply a discount code |
-| `POST` | `/softcode/index/index` | Save customer type (private / company) |
+| `GET`  | `/softcode/cart/index` | Cart items and totals (from Magento's quote collectors) |
+| `POST` | `/softcode/cart/applyCoupon` | Apply / clear a discount code |
+| `POST` | `/softcode/index/index` | Save buyer type (privat / cvr / ean) |
 | `GET`  | `/softcode/index/paymentMethods` | Available payment methods |
-| `POST` | `/softcode/index/saveAddress` | Save the address to the quote |
-| `POST` | `/softcode/index/savePayment` | Save the chosen payment method |
+| `POST` | `/softcode/index/saveAddress` | Save billing + shipping address |
+| `POST` | `/softcode/index/savePayment` | Save the chosen payment method (policy-checked) |
 | `POST` | `/softcode/index/placeOrder` | Place the order |
-
-Each controller declares its HTTP verb via `HttpGetActionInterface` /
-`HttpPostActionInterface`, per Magento conventions.
+| `GET`  | `/softcode/epay/config` | ePay payment-window parameters (if ePay installed) |
 
 ---
+
+## Testing
+
+```bash
+vendor/bin/phpunit -c dev/tests/unit/phpunit.xml.dist \
+  app/code/Softcode/CheckoutOverride/Test/Unit
+```
+
+`PaymentPolicyTest` is the executable specification of the payment rules
+(privat / cvr / ean × ePay / purchase order / invalid).
+
+## What CI checks
+
+The GitHub Actions workflow runs on every push/PR and **fails the build** on:
+- PHP syntax errors (`php -l`)
+- Magento 2 coding-standard **errors** (`phpcs --standard=Magento2 -n`)
+
+It does **not** run the unit or integration tests (those need a Magento install) —
+run those locally as shown above.
 
 ## Known limitations
 
-- **CSRF on the AJAX POST endpoints.** The frontend currently posts without a
-  `form_key`, so on a stock Magento the POST steps are subject to CSRF rejection.
-  Before production, send Magento's `form_key` with each POST **and** validate it in
-  the controller (implement `CsrfAwareActionInterface` backed by
-  `Magento\Framework\Data\Form\FormKey\Validator`). This is the recommended,
-  by-the-book fix and is intentionally left to the integrator so it can be tested
-  against a real checkout.
-- The template is deliberately minimal — style and copy are yours to own.
-
----
+- The **frontend** template/JS is a minimal reference; smoke-test the checkout flow
+  after install. It is not covered by browser tests.
+- **Shipping method** selection is expected from your shipping module/theme; this
+  module owns buyer type, address, payment and order placement.
+- **ePay** is optional; without `epay/payment` the ePay endpoint returns
+  "not available" and the rest of the checkout works normally.
 
 ## License
 

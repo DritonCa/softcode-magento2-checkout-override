@@ -7,4 +7,10 @@
                   instance="Softcode\CheckoutOverride\Observer\ValidateAndMapQuoteToOrder"/>
     </event>
 
+    <!-- Render varelinjerne som {{var items_html}} i ordre-mailen -->
+    <event name="email_order_set_template_vars_before">
+        <observer name="softcode_order_email_items"
+                  instance="Softcode\CheckoutOverride\Observer\AddOrderEmailItems"/>
+    </event>
+
 </config>
