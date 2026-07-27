@@ -97,8 +97,17 @@ vendor/bin/phpunit -c dev/tests/unit/phpunit.xml.dist \
   app/code/Softcode/CheckoutOverride/Test/Unit
 ```
 
-`PaymentPolicyTest` is the executable specification of the payment rules
-(privat / cvr / ean × ePay / purchase order / invalid).
+Two unit suites cover the business rules and their enforcement:
+
+- **`PaymentPolicyTest`** — the executable specification of the payment rules
+  (privat / cvr / ean × ePay / purchase order / invalid).
+- **`ValidateAndMapQuoteToOrderTest`** — the final submit gate: a missing buyer
+  type, a missing CVR/EAN number, a missing method, or a method not allowed for the
+  buyer type are all rejected, and a valid combination is mapped onto the order.
+
+The full quote → order flow (all buyer-type × method combinations, guest-order
+behaviour, quote-to-order field mapping) is specified as a concrete integration
+suite plus a manual smoke checklist in [Test/README.md](Test/README.md).
 
 ## What CI checks
 
