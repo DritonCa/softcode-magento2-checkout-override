@@ -24,6 +24,7 @@ jobs:
       # Real gate: Magento coding-standard ERRORS fail the build (warnings do not).
       - name: Magento 2 coding standard
         run: |
+          composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
           composer global require magento/magento-coding-standard --no-interaction
-          ~/.composer/vendor/bin/phpcs --standard=Magento2 --extensions=php,phtml -n \
+          "$(composer global config home)/vendor/bin/phpcs" --standard=Magento2 --extensions=php,phtml -n \
             --ignore='*/vendor/*' .
