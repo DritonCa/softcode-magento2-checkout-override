@@ -5,6 +5,9 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 ### Added
+- **Unit tests now run in CI** as a real gate — a standalone `Test/bootstrap.php`
+  autoloads the module and stubs the mocked Magento contracts, so both unit suites
+  run via `phpunit -c phpunit.xml.dist` without a Magento install.
 - `Test/Unit/Observer/ValidateAndMapQuoteToOrderTest` — unit tests for the final
   submit gate (missing buyer type / CVR / EAN / method and a method not allowed for
   the buyer type are rejected; a valid combination is mapped onto the order).

@@ -92,9 +92,12 @@ Exceptions are logged server-side; the browser only ever sees a safe message.
 
 ## Testing
 
+The unit tests are pure logic and **run without a Magento install** — a small
+`Test/bootstrap.php` autoloads the module and stubs the few Magento contracts the
+tests mock or carry data with (skipped automatically inside a real Magento install):
+
 ```bash
-vendor/bin/phpunit -c dev/tests/unit/phpunit.xml.dist \
-  app/code/Softcode/CheckoutOverride/Test/Unit
+phpunit -c phpunit.xml.dist
 ```
 
 Two unit suites cover the business rules and their enforcement:
@@ -114,9 +117,10 @@ suite plus a manual smoke checklist in [Test/README.md](Test/README.md).
 The GitHub Actions workflow runs on every push/PR and **fails the build** on:
 - PHP syntax errors (`php -l`)
 - Magento 2 coding-standard **errors** (`phpcs --standard=Magento2 -n`)
+- **Unit-test failures** (`phpunit -c phpunit.xml.dist`, run as a real gate)
 
-It does **not** run the unit or integration tests (those need a Magento install) —
-run those locally as shown above.
+The end-to-end **integration** suite needs a Magento install, so it is specified as
+a plan in [Test/README.md](Test/README.md) rather than run in CI.
 
 ## Known limitations
 
