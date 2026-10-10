@@ -1,24 +1,50 @@
 {
     "name": "softcode/module-checkout-override",
-    "description": "Custom server-driven one-page checkout for Magento 2 with a central payment policy and optional ePay integration.",
+    "description": "Server-driven one-page checkout for Magento 2 with private, company (CVR) and public-sector (EAN) buyers.",
     "type": "magento2-module",
     "license": "MIT",
+    "homepage": "https://softcode.dk/open-source",
+    "authors": [
+        {
+            "name": "SoftCode",
+            "homepage": "https://softcode.dk"
+        }
+    ],
+    "keywords": [
+        "magento2",
+        "checkout",
+        "one-page-checkout",
+        "b2b",
+        "ean",
+        "cvr",
+        "denmark"
+    ],
+    "support": {
+        "issues": "https://github.com/DritonCa/softcode-magento2-checkout-override/issues",
+        "source": "https://github.com/DritonCa/softcode-magento2-checkout-override"
+    },
     "require": {
-        "php": "~8.1.0||~8.2.0",
-        "magento/framework": ">=103.0",
+        "php": "~8.1.0||~8.2.0||~8.3.0||~8.4.0",
+        "magento/framework": ">=103.0.6",
         "magento/module-checkout": ">=100.4",
         "magento/module-quote": ">=101.2",
         "magento/module-sales": ">=103.0",
-        "magento/module-payment": ">=100.4"
+        "magento/module-payment": ">=100.4",
+        "magento/module-newsletter": ">=100.4",
+        "magento/module-directory": ">=100.4",
+        "magento/module-customer": ">=103.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.6"
     },
     "suggest": {
-        "epay/payment": "Enables the ePay (Bambora) hosted payment window in the checkout"
+        "epay/payment": "Enables the ePay (Bambora) payment window",
+        "softcode/module-gls": "GLS delivery methods and parcel-shop picker for this checkout"
     },
     "autoload": {
-        "files": ["registration.php"],
+        "files": [
+            "registration.php"
+        ],
         "psr-4": {
             "Softcode\\CheckoutOverride\\": ""
         }

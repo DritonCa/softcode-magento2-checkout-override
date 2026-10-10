@@ -26,7 +26,11 @@ class ValidateAndMapQuoteToOrderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->observer = new ValidateAndMapQuoteToOrder(new PaymentPolicy());
+        $this->observer = new ValidateAndMapQuoteToOrder(new PaymentPolicy([
+            'privat' => ['epay'],
+            'cvr' => ['epay', 'purchaseorder'],
+            'ean' => ['epay', 'purchaseorder'],
+        ]));
     }
 
     /**
@@ -118,5 +122,32 @@ class ValidateAndMapQuoteToOrderTest extends TestCase
 
         $this->assertSame('ean', $order->getData('company_type'));
         $this->assertSame('5790000000000', $order->getData('company_ean'));
+    }
+
+    public function testRejectsEanThatIsNotThirteenDigits(): void
+    {
+        $this->expectException(LocalizedException::class);
+        $this->executeObserver(['company_type' => 'ean', 'company_ean' => '579000000'], 'epay', new DataObject());
+    }
+
+    public function testMapsAlternativeDeliveryAddressToOrder(): void
+    {
+        $order = new DataObject();
+        $this->executeObserver(
+            [
+                'company_type' => 'privat',
+                'alt_company' => 'Skolen',
+                'alt_receiver' => 'Jens Hansen',
+                'alt_street' => 'Skolevej 1',
+                'alt_postcode' => '2400',
+                'alt_city' => 'København NV',
+            ],
+            'epay',
+            $order
+        );
+
+        $this->assertSame('Skolen', $order->getData('alt_company'));
+        $this->assertSame('Jens Hansen', $order->getData('alt_receiver'));
+        $this->assertSame('2400', $order->getData('alt_postcode'));
     }
 }

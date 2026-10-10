@@ -2,25 +2,27 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!--
-        Buyer-type payment rules. Change here to reconfigure which methods a
-        buyer type may use; controllers and the submit observer all read from
-        this single policy.
+        Payment rules per buyer type are set in the admin
+        (Sales > Checkout > Softcode Checkout > Payment rules). To ship defaults with your
+        own module instead, set the allowedMethods argument, e.g.:
+
+        <type name="Softcode\CheckoutOverride\Model\Payment\PaymentPolicy">
+            <arguments>
+                <argument name="allowedMethods" xsi:type="array">
+                    <item name="privat" xsi:type="array">
+                        <item name="epay" xsi:type="string">epay</item>
+                    </item>
+                </argument>
+            </arguments>
+        </type>
     -->
-    <type name="Softcode\CheckoutOverride\Model\Payment\PaymentPolicy">
-        <arguments>
-            <argument name="allowedMethods" xsi:type="array">
-                <item name="privat" xsi:type="array">
-                    <item name="epay" xsi:type="string">epay</item>
-                </item>
-                <item name="cvr" xsi:type="array">
-                    <item name="epay" xsi:type="string">epay</item>
-                    <item name="purchaseorder" xsi:type="string">purchaseorder</item>
-                </item>
-                <item name="ean" xsi:type="array">
-                    <item name="epay" xsi:type="string">epay</item>
-                    <item name="purchaseorder" xsi:type="string">purchaseorder</item>
-                </item>
-            </argument>
-        </arguments>
+
+    <type name="Magento\Framework\Mail\Template\TransportBuilder">
+        <plugin name="softcode_sales_email_reply_to" type="Softcode\CheckoutOverride\Plugin\Email\SalesEmailReplyTo"/>
+    </type>
+
+    <type name="Magento\Sales\Api\PaymentFailuresInterface">
+        <plugin name="softcode_suppress_payment_failed_email"
+                type="Softcode\CheckoutOverride\Plugin\Checkout\SuppressPaymentFailedEmail"/>
     </type>
 </config>

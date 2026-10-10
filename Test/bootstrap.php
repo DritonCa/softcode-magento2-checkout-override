@@ -133,3 +133,24 @@ namespace Magento\Quote\Model\Quote {
         }
     }
 }
+
+namespace Magento\Framework\App\Config {
+    if (!interface_exists(ScopeConfigInterface::class)) {
+        interface ScopeConfigInterface
+        {
+            public function getValue($path, $scopeType = 'default', $scopeCode = null);
+
+            public function isSetFlag($path, $scopeType = 'default', $scopeCode = null);
+        }
+    }
+}
+
+namespace Magento\Store\Model {
+    if (!interface_exists(ScopeInterface::class)) {
+        interface ScopeInterface
+        {
+            public const SCOPE_STORE = 'store';
+            public const SCOPE_WEBSITE = 'website';
+        }
+    }
+}

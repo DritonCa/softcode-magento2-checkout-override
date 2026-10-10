@@ -13,6 +13,7 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Data\Form\FormKey\Validator as FormKeyValidator;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\UrlInterface;
+use Magento\Newsletter\Model\SubscriptionManagerInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -26,6 +27,9 @@ use Softcode\CheckoutOverride\Model\Payment\PaymentPolicy;
  * it is only validated against the central PaymentPolicy. Purchase-order buyers
  * get a PO number derived from their EAN/CVR. When ePay is selected the response
  * carries the URL that starts the ePay payment window.
+ *
+ * A failure is logged with a short reference that is also shown to the customer,
+ * so support can find the exact log line.
  */
 class PlaceOrder implements HttpPostActionInterface, CsrfAwareActionInterface
 {
@@ -40,13 +44,16 @@ class PlaceOrder implements HttpPostActionInterface, CsrfAwareActionInterface
         private readonly UrlInterface $urlBuilder,
         private readonly RequestInterface $request,
         private readonly FormKeyValidator $formKeyValidator,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly SubscriptionManagerInterface $subscriptionManager
     ) {
     }
 
     public function execute(): ResultInterface
     {
         $result = $this->resultJsonFactory->create();
+        $quote = null;
+        $method = '';
 
         try {
             $quote = $this->checkoutSession->getQuote();
@@ -55,13 +62,13 @@ class PlaceOrder implements HttpPostActionInterface, CsrfAwareActionInterface
             }
 
             $payment = $quote->getPayment();
-            $method = (string) $payment->getMethod();
+            $method = (string)$payment->getMethod();
             if ($method === '') {
                 throw new LocalizedException(__('Please choose a payment method.'));
             }
 
             // Final server-side gate: the same policy the buyer was validated against earlier.
-            $this->paymentPolicy->assertAllowed((string) $quote->getData('company_type'), $method);
+            $this->paymentPolicy->assertAllowed((string)$quote->getData('company_type'), $method);
 
             if ($method === 'purchaseorder') {
                 $payment->importData([
@@ -79,7 +86,11 @@ class PlaceOrder implements HttpPostActionInterface, CsrfAwareActionInterface
             $quote->getBillingAddress()->setEmail($quote->getCustomerEmail());
             $this->quoteRepository->save($quote);
 
-            $orderId = (int) $this->cartManagement->placeOrder($quote->getId());
+            $orderId = (int)$this->cartManagement->placeOrder($quote->getId());
+
+            if ((int)$this->request->getParam('newsletter') === 1) {
+                $this->subscribe((string)$quote->getCustomerEmail(), (int)$quote->getStoreId(), $orderId);
+            }
 
             if ($method === 'epay') {
                 return $result->setData([
@@ -96,8 +107,41 @@ class PlaceOrder implements HttpPostActionInterface, CsrfAwareActionInterface
         } catch (LocalizedException $e) {
             return $result->setData(['success' => false, 'error' => $e->getMessage()]);
         } catch (\Throwable $e) {
-            $this->logger->error('Checkout placeOrder failed', ['exception' => $e, 'quote_id' => $this->checkoutSession->getQuoteId()]);
-            return $result->setData(['success' => false, 'error' => __('Your order could not be completed. Please try again.')]);
+            $reference = strtoupper(substr(sha1(uniqid('', true)), 0, 6));
+            $this->logger->critical('Checkout placeOrder failed [' . $reference . ']: ' . $e->getMessage(), [
+                'reference' => $reference,
+                'quote_id' => $quote?->getId(),
+                'payment_method' => $method,
+                'grand_total' => $quote?->getGrandTotal(),
+                'exception' => $e,
+            ]);
+            return $result->setData([
+                'success' => false,
+                'reference' => $reference,
+                'error' => __(
+                    'Your order could not be completed. Please try again, or contact us and quote reference %1. '
+                    . 'No money has been charged.',
+                    $reference
+                ),
+            ]);
+        }
+    }
+
+    /**
+     * Runs after the order is placed and never fails it: the customer has ordered.
+     */
+    private function subscribe(string $email, int $storeId, int $orderId): void
+    {
+        if ($email === '') {
+            return;
+        }
+        try {
+            $this->subscriptionManager->subscribe($email, $storeId);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Newsletter subscription from checkout failed', [
+                'order_id' => $orderId,
+                'exception' => $e,
+            ]);
         }
     }
 }

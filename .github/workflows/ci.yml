@@ -7,29 +7,39 @@ on:
     branches: [ main ]
 
 jobs:
-  quality:
+  php:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [ '8.1', '8.2', '8.3', '8.4' ]
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: ${{ matrix.php }}
           tools: composer, phpunit:9
 
       - name: PHP syntax lint
         run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 -P4 php -l
 
-      # Real gate: Magento coding-standard ERRORS fail the build (warnings do not).
+      # Real gate: the unit tests run without a Magento install (see Test/bootstrap.php).
+      - name: Unit tests
+        run: phpunit -c phpunit.xml.dist
+
+  coding-standard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
       - name: Magento 2 coding standard
         run: |
           composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
           composer global require magento/magento-coding-standard --no-interaction
-          "$(composer global config home)/vendor/bin/phpcs" --standard=Magento2 --extensions=php,phtml -n \
-            --ignore='*/vendor/*,*/Test/bootstrap.php' .
-
-      # Real gate: the unit tests run without a Magento install (see Test/bootstrap.php),
-      # so a failing test breaks the build.
-      - name: PHP unit tests
-        run: phpunit -c phpunit.xml.dist
+          "$(composer global config home)/vendor/bin/phpcs" --standard=Magento2 -n \
+            --extensions=php,phtml --ignore='*/vendor/*,*/Test/bootstrap.php' .

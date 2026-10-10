@@ -34,10 +34,26 @@
 
     <section class="sc-section">
         <h2><?= $escaper->escapeHtml(__('Address')) ?></h2>
-        <input type="text" id="sc-street" placeholder="<?= $escaper->escapeHtmlAttr(__('Street')) ?>" required>
-        <input type="text" id="sc-housenumber" placeholder="<?= $escaper->escapeHtmlAttr(__('House number')) ?>">
-        <input type="text" id="sc-postcode" placeholder="<?= $escaper->escapeHtmlAttr(__('Postcode')) ?>" required>
-        <input type="text" id="sc-city" placeholder="<?= $escaper->escapeHtmlAttr(__('City')) ?>" required>
+        <input type="text" id="sc-address-street" placeholder="<?= $escaper->escapeHtmlAttr(__('Street')) ?>" required>
+        <input type="text" id="sc-address-housenumber" placeholder="<?= $escaper->escapeHtmlAttr(__('House number')) ?>">
+        <input type="text" id="sc-address-postcode" placeholder="<?= $escaper->escapeHtmlAttr(__('Postcode')) ?>" required>
+        <input type="text" id="sc-address-city" placeholder="<?= $escaper->escapeHtmlAttr(__('City')) ?>" required>
+
+        <label><input type="checkbox" id="sc-use-alt-address"> <?= $escaper->escapeHtml(__('Deliver to another address')) ?></label>
+        <div id="sc-alt-address" style="display:none;">
+            <input type="text" id="sc-alt-company" placeholder="<?= $escaper->escapeHtmlAttr(__('Company (optional)')) ?>">
+            <input type="text" id="sc-alt-receiver" placeholder="<?= $escaper->escapeHtmlAttr(__('Receiver')) ?>">
+            <input type="text" id="sc-alt-street" placeholder="<?= $escaper->escapeHtmlAttr(__('Street')) ?>">
+            <input type="text" id="sc-alt-housenumber" placeholder="<?= $escaper->escapeHtmlAttr(__('House number')) ?>">
+            <input type="text" id="sc-alt-postcode" placeholder="<?= $escaper->escapeHtmlAttr(__('Postcode')) ?>">
+            <input type="text" id="sc-alt-city" placeholder="<?= $escaper->escapeHtmlAttr(__('City')) ?>">
+        </div>
+    </section>
+
+    <section class="sc-section">
+        <h2><?= $escaper->escapeHtml(__('Delivery')) ?></h2>
+        <!-- Shipping modules render their methods here (e.g. Softcode_Gls). -->
+        <div id="sc-delivery-methods"></div>
     </section>
 
     <section class="sc-section">
@@ -56,6 +72,7 @@
     <section class="sc-section" id="sc-cart"><!-- cart summary loaded by cart.js --></section>
 
     <section class="sc-section">
+        <label><input type="checkbox" id="sc-newsletter"> <?= $escaper->escapeHtml(__('Sign me up for the newsletter.')) ?></label>
         <label><input type="checkbox" id="sc-accept-terms"> <?= $escaper->escapeHtml(__('I accept the terms and conditions.')) ?></label>
         <p id="sc-order-message" class="text-danger" style="display:none;"></p>
         <button type="button" id="sc-place-order" disabled><?= $escaper->escapeHtml(__('Place order')) ?></button>

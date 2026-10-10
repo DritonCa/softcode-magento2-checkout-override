@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/system_file.xsd">
+    <system>
+        <section id="softcode_checkout" translate="label" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Softcode Checkout</label>
+            <tab>sales</tab>
+            <resource>Softcode_CheckoutOverride::config</resource>
+
+            <group id="general" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General</label>
+                <field id="redirect_cart" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Skip Cart Page</label>
+                    <comment>Send /checkout/cart straight to the one-page checkout.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="country" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Address Country</label>
+                    <comment>Country used for the checkout addresses. Empty uses the store's default country.</comment>
+                    <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+            </group>
+
+            <group id="payment" translate="label comment" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Payment Rules</label>
+                <comment>Payment methods each buyer type may use. Nothing selected means every available method.</comment>
+                <field id="allowed_privat" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Private (privat)</label>
+                    <source_model>Magento\Payment\Model\Config\Source\Allmethods</source_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="allowed_cvr" translate="label" type="multiselect" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Company (CVR)</label>
+                    <source_model>Magento\Payment\Model\Config\Source\Allmethods</source_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="allowed_ean" translate="label" type="multiselect" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Public Sector (EAN)</label>
+                    <source_model>Magento\Payment\Model\Config\Source\Allmethods</source_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+            </group>
+
+            <group id="email" translate="label" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Email</label>
+                <field id="reply_to" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Reply-To for Order Emails</label>
+                    <comment>Optional. Used on the order confirmation, invoice, shipment and credit memo emails.</comment>
+                    <validate>validate-email</validate>
+                </field>
+                <field id="payment_failed_enabled" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Send "Payment Failed" Email</label>
+                    <comment>No (recommended) logs failed payments instead. Bots abuse this email to deliver injected template text.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Refresh the cached customer-data "cart" section (minicart) after the checkout changes the cart. -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Customer:etc/frontend/sections.xsd">
+    <action name="softcode/index/placeOrder">
+        <section name="cart"/>
+    </action>
+    <action name="softcode/cart/applyCoupon">
+        <section name="cart"/>
+    </action>
+</config>
