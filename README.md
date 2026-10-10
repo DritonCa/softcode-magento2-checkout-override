@@ -44,7 +44,7 @@ on a live shop.
 ## Installation
 
 ```bash
-composer config repositories.softcode-checkout vcs https://github.com/DritonCa/softcode-magento2-checkout-override
+composer config repositories.softcode-magento2-checkout-override vcs https://github.com/DritonCa/softcode-magento2-checkout-override
 composer require softcode/module-checkout-override:^2.0
 bin/magento module:enable Softcode_CheckoutOverride
 bin/magento setup:upgrade
