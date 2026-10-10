@@ -1,6 +1,7 @@
 # Softcode_CheckoutOverride – one-page B2B/B2C checkout for Magento 2
 
 [![CI](https://github.com/DritonCa/softcode-magento2-checkout-override/actions/workflows/ci.yml/badge.svg)](https://github.com/DritonCa/softcode-magento2-checkout-override/actions/workflows/ci.yml)
+[![Packagist](https://img.shields.io/packagist/v/softcode/module-checkout-override.svg)](https://packagist.org/packages/softcode/module-checkout-override)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Replaces the default Magento checkout with a server-driven **one-page checkout** for
@@ -44,7 +45,6 @@ on a live shop.
 ## Installation
 
 ```bash
-composer config repositories.softcode-magento2-checkout-override vcs https://github.com/DritonCa/softcode-magento2-checkout-override
 composer require softcode/module-checkout-override:^2.0
 bin/magento module:enable Softcode_CheckoutOverride
 bin/magento setup:upgrade
